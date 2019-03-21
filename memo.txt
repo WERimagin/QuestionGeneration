@@ -1,0 +1,101 @@
+objects of constant density are proportional to volume by what force to define standard weights ? .
+if a force is pointing horizontally to the northeast , how many forces can you split the force into ?
+in what kind of system of particles are there no unbalanced iinternal forces ?
+given the strength of french forces at louisbourg , what did loudoun do ?
+according to agreement between iroquois and british , where was a strong house to be built ?
+static friction balances what force when there is no movement of an object on a surface ?
+tension , compression , and drag are what kind of forces ?
+tumors that are able to evade the body 's immune response can become what ?
+invertebrates do not generate what type of cells that are a part of the vertebrate adaptive immune system ?
+female sex hormones are immunostimulators of which immune responses ?
+
+
+(ROOT
+  (SBARQ
+    (WHNP (WDT what) (NNS cells))
+    (SQ (VBP are)
+      (NP
+        (NP (DT the) (JJ second) (NN arm))
+        (PP (IN of)
+          (NP (DT the) (JJ innate) (JJ immune) (NN system)))))
+    (. ?)))
+
+    (ROOT
+      (S
+        (NP (JJ innate) (NNS cells))
+        (VP (MD can)
+          (VP (VB act)
+            (PP (IN as)
+              (NP
+                (NP (NNS mediators))
+                (PP (IN in)
+                  (NP
+                    (NP (DT the) (NN activation))
+                    (PP (IN of)
+                      (NP
+                        (NP (WP what) (NN branch))
+                        (PP (IN of)
+                          (NP (DT the) (JJ immune) (NN system)))))))))))
+
+(ROOT
+  (S
+    (NP (JJ female) (NN sex) (NNS hormones))
+    (VP (VBP are)
+      (NP
+        (NP (NNS immunostimulators))
+        (WHPP (IN of)
+          (WHNP (WDT which)
+            (NP (JJ immune) (NNS responses))))))
+    (. ?)))
+
+(ROOT
+  (SBARQ
+    (WHADJP (WRB how) (JJ many))
+    (SQ
+      (NP (NNS panthers))
+      (VP (VBD went)
+        (PP (TO to)
+          (NP (DT the) (JJ pro) (NN bowl)))))
+    (. ?)))
+
+(ROOT
+  (SBARQ
+    (WHADVP (WRB when))
+    (SQ (VBD was)
+      (NP (DT the) (JJ last) (NN time) (NN san) (NN francisco))
+      (VP (VBD hosted)
+        (NP (DT a) (JJ super) (NN bowl))))
+    (. ?)))
+
+    (ROOT
+      (SBARQ
+        (WHNP
+          (WHADJP (WRB how) (JJ many))
+          (NNS times))
+        (SQ (VBZ has)
+          (NP (DT a) (JJ super) (NN bowl))
+          (VP (VBN taken)
+            (NP (NN place))
+            (PP (IN at)
+              (NP
+                (NP (NN miami) (POS 's))
+                (NN sun) (NN life) (NN stadium)))))
+        (. ?)))
+
+(ROOT
+  (SBARQ
+    (WHNP (WP what))
+    (SQ (VBZ is)
+      (NP
+        (NP (DT the) (NN name))
+        (PP (IN of)
+          (NP
+            (NP (DT the) (NN stadium))
+            (SBAR
+              (WHADVP (WRB where))
+              (S
+                (NP
+                  (NP (JJ super) (NN bowl))
+                  (NP (CD 50)))
+                (VP (VBD was)
+                  (VP (VBN played)))))))))
