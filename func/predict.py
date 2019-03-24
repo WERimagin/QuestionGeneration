@@ -27,6 +27,7 @@ def predict_calc(predict,target):
     #target:(batch,seq_len)
     type="normal"
     if type=="normal":
+        print(target)
         batch=predict.size(0)
         seq_len=predict.size(1)
         predict=predict.contiguous().view(batch*seq_len,-1)
