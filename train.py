@@ -79,16 +79,16 @@ def model_handler(args,data,train=True,data_kind="train"):
                 logger(args,"epoch,{}\tbatch\t{}\tloss:{}\ttime:{}".format(epoch,i_batch,loss.data,now-start))
                 predict,target=predict_sentence(args,predict,output_words[:,1:],id2word)#(batch,seq_len)
                 if i_batch%500==0:
-                    print(predict[0])
-                    print(target[0])
-                    print()
+                    logger(args,predict[0])
+                    logger(args,target[0])
+                    logger(args," ")
         else:
             predict_rate+=predict_calc(predict,output_words[:,1:])
             predict,target=predict_sentence(args,predict,output_words[:,1:],id2word)#(batch,seq_len)
             if i_batch==0:
-                print(predict[0])
-                print(target[0])
-                print()
+                logger(args,predict[0])
+                logger(args,target[0])
+                logger(args," ")
 
     #epochの記録
     if train:
