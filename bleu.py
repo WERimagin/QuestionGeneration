@@ -48,26 +48,26 @@ random.seed(0)
 path="data/predict_sentences.json"
 with open(path,"r")as f:
     t=json.load(f)
-    targets=t["sources"]
-    src=t["targets"]
+    srcs=t["sources"]
+    targets=t["targets"]
     predicts=t["predicts"]
 
 
 for i in range(100):
-    print(src[i])
+    print(srcs[i])
     print(targets[i])
     print(predicts[i])
     print()
 
-target=[t.split() for t in targets]
-predict=[p.split() for p in predicts]
+targets=[t.split() for t in targets]
+predicts=[p.split() for p in predicts]
 
 #一文ずつ評価,corpusのサイズ考慮
 if True:
     target_dict=defaultdict(lambda: [])
     predict_dict=defaultdict(str)
-    src_set=set(src)
-    for s,t,p in zip(src,target,predict):
+    src_set=set(srcs)
+    for s,t,p in zip(srcs,targets,predicts):
         target_dict[s].append(t)
         predict_dict[s]=p
 
@@ -75,7 +75,6 @@ if True:
     predict=[predict_dict[s] for s in src_set]
 
     print(len(target),len(predict))
-
 
     print(corpus_bleu(target,predict,weights=(1,0,0,0)))
     print(corpus_bleu(target,predict,weights=(0.5,0.5,0,0)))

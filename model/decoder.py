@@ -20,9 +20,9 @@ class Decoder(nn.Module):
         self.beam_width=args.beam_width
         self.teacher_rate=args.teacher_rate
 
-        self.word_embed=nn.Embedding(args.vocab_size, args.embed_size,padding_idx=constants.PAD)
-        #self.word_embed=nn.Embedding(args.vocab_size, args.embed_size,padding_idx=constants.PAD,\
-        #                            _weight=torch.tensor(args.pretrained_weight,dtype=torch.float).to(args.device))
+        #self.word_embed=nn.Embedding(args.vocab_size, args.embed_size,padding_idx=constants.PAD)
+        self.word_embed=nn.Embedding(args.vocab_size, args.embed_size,padding_idx=constants.PAD,\
+                                    _weight=torch.tensor(args.pretrained_weight,dtype=torch.float).to(args.device))
         #self.hidden_exchange=nn.Linear(self.hidden_size*2,self.hidden_size)
         self.gru=nn.GRU(self.embed_size,self.hidden_size,num_layers=args.layer_size,bidirectional=False,dropout=args.dropout,batch_first=True)#decoderは双方向にできない
 
