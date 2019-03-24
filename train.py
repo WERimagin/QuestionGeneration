@@ -79,7 +79,7 @@ def model_handler(args,data,train=True,data_kind="train"):
                 logger(args,"epoch,{}\tbatch\t{}\tloss:{}\ttime:{}".format(epoch,i_batch,loss.data,now-start))
                 predict,target=predict_sentence(args,predict,output_words[:,1:],id2word)#(batch,seq_len)
                 if i_batch%500==0:
-                    for i in range(5)
+                    for i in range(5):
                         logger(args,predict[i])
                         logger(args,target[i])
                         logger(args," ")
