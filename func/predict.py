@@ -25,14 +25,13 @@ def loss_calc(predict,target):
 def predict_calc(predict,target):
     #predict:(batch,seq_len,embed_size)
     #target:(batch,seq_len)
-    type="normal"
-    if type=="normal":
-        batch=predict.size(0)
-        seq_len=predict.size(1)
-        predict=predict.contiguous().view(batch*seq_len,-1)
-        target=target.contiguous().view(-1)
-        predict_rate=(torch.argmax(predict,dim=-1)==target).sum().item()/seq_len
-        return predict_rate
+    batch=predict.size(0)
+    seq_len=predict.size(1)
+    predict=predict.contiguous().view(batch*seq_len,-1)
+    target=target.contiguous().view(-1)
+    predict_rate=(torch.argmax(predict,dim=-1)==target).sum().item()/seq_len
+    return predict_rate
+    """
     elif type=="bleu":
         predict=torch.argmax(predict,dim=-1).tolist()#(batch,seq_len,embed_size)
         target=target.tolist()#(batch,seq_len)
@@ -40,6 +39,7 @@ def predict_calc(predict,target):
         for p,t in zip(predict,target):#batchごと
             predict_sum+=nltk.bleu_score.sentence_bleu([p],t)
         return predict_sum
+    """
 
 #idからid2wordを使ってwordに戻して返す
 def predict_sentence(args,predict,target,id2word):
