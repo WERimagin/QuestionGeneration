@@ -20,9 +20,13 @@ class Attention(nn.Module):
     def forward(self,decoder_hidden,encoder_output):
         decoder_hidden=torch.unsqueeze(decoder_hidden,dim=1)#(batch,1,hidden_size)
         encoder_output_transpose=torch.transpose(encoder_output,1,2)#(batch,hidden_size*2,seq_len)
+
+        #score
         output=self.W(decoder_hidden)#(batch,1,hidden_size*2)
         output=torch.bmm(output,encoder_output_transpose)#(batch,1,seq_len)
         output=F.softmax(output,dim=-1)#(batch,1,seq_len)
+
+        #scoreとoutputでbmm
         output=torch.bmm(output,encoder_output)#(batch,1,hidden_size*2)
         output=torch.squeeze(output,dim=1)#(batch,hidden_size*2)
         return output

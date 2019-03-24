@@ -28,9 +28,11 @@ class Decoder(nn.Module):
 
         self.attention=Attention(args)
         self.attention_wight=nn.Linear(self.hidden_size*3,self.hidden_size*3)
-        self.out=nn.Linear(self.hidden_size*3,self.vocab_size)
+
+        self.out=nn.Linear(self.hidden_size*2,self.vocab_size)
+
         self.dropout=nn.Dropout(args.dropout)
-        #self.out=nn.Linear(self.hidden_size*1,self.vocab_size)
+
 
     #decoderでのタイムステップ（単語ごと）の処理
     #input:(batch,1)
@@ -54,10 +56,10 @@ class Decoder(nn.Module):
 
             #アテンションの重みと元々の出力の重み和を計算してrelu
             #このフェーズは無くても良い(Opennmtなど)
-            output=self.attention_wight(torch.cat((output,attention_output),dim=-1))#(batch,hidden_size*3)
+            #attention_output=self.attention_wight(torch.cat((output,attention_output),dim=-1))#(batch,hidden_size*3)
 
         #relu
-        output=self.dropout(F.relu(output))#(barch,hidden_size*3)
+        output=self.dropout(F.relu(attention_output))#(barch,hidden_size*3)
 
         #単語辞書のサイズに変換する
         output=self.out(output)#(batch,vocab_size)
@@ -88,6 +90,7 @@ class Decoder(nn.Module):
         #出力の長さ。教師がない場合は20で固定
         output_maxlen=output_seq_len
         teacher_forcing_ratio=self.teacher_rate if train else 0
+        print(teacher_forcing_ratio)
 
         #decoderからの出力結果
         outputs=torch.from_numpy(np.zeros((output_seq_len,batch_size,self.vocab_size))).to(self.device)
@@ -103,6 +106,7 @@ class Decoder(nn.Module):
 
         return outputs
 
+    #ビームサーチ用のデコーダー。evaluateの時のみ
     #https://github.com/budzianowski/PyTorch-Beam-Search-Decoding/blob/master/decode_beam.py
     #encoder_output:(batch,seq_len,hidden_size*direction)
     #encoder_hidden:(direction*layer_size,batch,hidden_size)
