@@ -11,6 +11,7 @@ from func import constants
 #lossの計算
 def loss_calc(predict,target):
     #criterion = nn.CrossEntropyLoss(ignore_index=constants.PAD)#<pad>=0を無視
+    print(target)
     criterion = nn.CrossEntropyLoss()#<pad>=0を無視
     batch=predict.size(0)
     seq_len=predict.size(1)
@@ -27,7 +28,6 @@ def predict_calc(predict,target):
     #target:(batch,seq_len)
     type="normal"
     if type=="normal":
-        print(target)
         batch=predict.size(0)
         seq_len=predict.size(1)
         predict=predict.contiguous().view(batch*seq_len,-1)
