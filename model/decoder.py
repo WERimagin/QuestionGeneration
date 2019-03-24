@@ -18,7 +18,7 @@ class Decoder(nn.Module):
         self.batch_size=0
         self.device=args.device
         self.beam_width=args.beam_width
-        self.teacher_rate=args.teachder_rate
+        self.teacher_rate=args.teacher_rate
 
         self.word_embed=nn.Embedding(args.vocab_size, args.embed_size,padding_idx=constants.PAD)
         #self.word_embed=nn.Embedding(args.vocab_size, args.embed_size,padding_idx=constants.PAD,\
