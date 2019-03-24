@@ -156,5 +156,5 @@ def data_loader(args,path,first=True):
         args.embed_size=id2vec.shape[1]
 
     logger(args,"data_size:{}".format(len(sentences_id)))
-
+    
     return data

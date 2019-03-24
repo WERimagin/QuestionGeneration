@@ -19,8 +19,9 @@ class Decoder(nn.Module):
         self.device=args.device
         self.beam_width=args.beam_width
 
-        self.word_embed=nn.Embedding(args.vocab_size, args.embed_size,padding_idx=constants.PAD,\
-                                    _weight=torch.tensor(args.pretrained_weight,dtype=torch.float).to(args.device))
+        self.word_embed=nn.Embedding(args.vocab_size, args.embed_size,padding_idx=constants.PAD)
+        #self.word_embed=nn.Embedding(args.vocab_size, args.embed_size,padding_idx=constants.PAD,\
+        #                            _weight=torch.tensor(args.pretrained_weight,dtype=torch.float).to(args.device))
         #self.hidden_exchange=nn.Linear(self.hidden_size*2,self.hidden_size)
         self.gru=nn.GRU(self.embed_size,self.hidden_size,num_layers=args.layer_size,bidirectional=False,dropout=args.dropout,batch_first=True)#decoderは双方向にできない
 
@@ -98,6 +99,8 @@ class Decoder(nn.Module):
             outputs[i]=output#outputsにdecoderの各ステップから出力されたベクトルを入力
 
         outputs=torch.transpose(outputs,0,1)#(batch,seq_len,vocab_size)
+
+
         return outputs
 
     #https://github.com/budzianowski/PyTorch-Beam-Search-Decoding/blob/master/decode_beam.py
