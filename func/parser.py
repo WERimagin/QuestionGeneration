@@ -19,7 +19,7 @@ def get_args():
     #model_hyper_parameter
     parser.add_argument("--embed_size", type=int, default="300", help="input rnn hidden size")
     parser.add_argument("--hidden_size", type=int, default="600", help="input rnn hidden size")
-    parser.add_argument("--epoch_num", type=int, default="200", help="input epoch number")
+    parser.add_argument("--epoch_num", type=int, default="50", help="input epoch number")
     parser.add_argument("--dropout", type=float, default="0.3", help="input epoch number")
     parser.add_argument("--layer_size", type=int, default="2", help="input epoch number")
     parser.add_argument("--vocab_size", type=int, default="50000", help="input epoch number")

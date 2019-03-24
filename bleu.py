@@ -48,8 +48,8 @@ random.seed(0)
 path="data/predict_sentences.json"
 with open(path,"r")as f:
     t=json.load(f)
-    targets=t["questions"]
-    src=t["sentences"]
+    targets=t["sources"]
+    src=t["targets"]
     predicts=t["predicts"]
 
 
