@@ -8,7 +8,6 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from func import constants
 import datetime
-import argparse
 import json
 import platform
 
@@ -71,7 +70,7 @@ class BatchMaker:
             batches.append(batch)
         return batches
 
-def to_var(x):
+def to_var(args,x):
     if torch.cuda.is_available():
         x = x.cuda()
     return Variable(x)
@@ -81,12 +80,12 @@ def make_tensor(id_number):
     return to_var(torch.from_numpy(np.array(id_number,dtype="long")))
 
 #渡されたデータをpytorchのためにto_varで変換する
-def make_vec(sentences):
+def make_vec(args,sentences):
     maxsize=max([len(sentence) for sentence in sentences])
     sentences_cp=[]
     for sentence in sentences:
         sentences_cp.append(sentence+[constants.PAD]*(maxsize-len(sentence)))
-    return to_var(torch.from_numpy(np.array(sentences_cp,dtype="long")))
+    return torch.from_numpy(np.array(sentences_cp,dtype="long")).to(args.device)
 
 def make_vec_c(sentences):
     sent_maxsize=max([len(sentence) for sentence in sentences])
@@ -104,42 +103,6 @@ def logger(args,text):
     if args.system=="Linux":
         with open("log.txt","a")as f:
             f.write("{}\t{}\n".format(str(datetime.datetime.today()).replace(" ","-"),text))
-
-def get_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--start_epoch", type=int, default="0", help="input model epoch")
-    parser.add_argument("--cuda_number", type=int, default="0", help="specify cuda number")
-    parser.add_argument("--train_batch_size", type=int, default="32", help="input train batch size")
-    parser.add_argument("--test_batch_size", type=int, default="64", help="input test batch size")
-
-    ##データのオプション
-    parser.add_argument("--src_length", type=int, default="60", help="input train batch size")
-    parser.add_argument("--tgt_length", type=int, default="20", help="input test batch size")
-    parser.add_argument("--model_version", type=int, default="1", help="input test batch size")
-    parser.add_argument("--use_interro", type=bool, default=True, help="input test batch size")
-    parser.add_argument("--data_rate", type=float, default="1", help="input epoch number")
-
-    #model_hyper_parameter
-    parser.add_argument("--hidden_size", type=int, default="600", help="input rnn hidden size")
-    parser.add_argument("--epoch_num", type=int, default="200", help="input epoch number")
-    parser.add_argument("--dropout", type=float, default="0.3", help="input epoch number")
-    parser.add_argument("--layer_size", type=int, default="2", help="input epoch number")
-    parser.add_argument("--vocab_size", type=int, default="50000", help="input epoch number")
-    parser.add_argument("--lr", type=float, default="0.001", help="input epoch number")
-    parser.add_argument("--teacher_rate", type=float, default="0.5", help="input epoch number")
-
-    #そのたのパラメーター
-    parser.add_argument("--print_iter", type=int, default="50", help="input epoch number")
-    parser.add_argument("--not_train", type=bool, default=False, help="input epoch number")
-    parser.add_argument("--use_train_data", type=bool, default=False, help="input epoch number")
-    parser.add_argument("--model_name", type=str, default="", help="input epoch number")
-    args = parser.parse_args()
-    args.start_time=str(datetime.datetime.today()).replace(" ","-")
-    args.high_epoch=0
-    args.high_score=0
-    args.system=platform.system()
-
-    return args
 
 #ファイルから文、質問文、word2idなどを読み込み、辞書形式で返す
 def data_loader(args,path,first=True):
@@ -182,8 +145,8 @@ def data_loader(args,path,first=True):
         sentences_id=[sent + [word2id["<SEP>"]]+ interro for sent,interro in zip(sentences_id,question_interros_id)]
     questions_id=[[word2id["<SOS>"]] + sent + [word2id["<EOS>"]] for sent in questions_id]
 
-    data={"sentences":sentences_id,
-        "questions":questions_id,
+    data={"sources":sentences_id,
+        "targets":questions_id,
         "id2word":id2word}
 
     if first:
@@ -192,78 +155,6 @@ def data_loader(args,path,first=True):
         #args.vocab_size=id2vec.shape[0]
         args.embed_size=id2vec.shape[1]
 
-    logger(args,"data_size:{}".format(data_size))
+    logger(args,"data_size:{}".format(len(sentences_id)))
 
     return data
-
-
-#lossの計算
-def loss_calc(predict,target):
-    criterion = nn.CrossEntropyLoss(ignore_index=constants.PAD)#<pad>=0を無視
-    batch=predict.size(0)
-    seq_len=predict.size(1)
-    #batchとseq_lenを掛けて一次元にしてentropyを計算
-    predict=predict.contiguous().view(batch*seq_len,-1)#(batch*seq_len,vocab_size)
-    target=target.contiguous().view(-1)#(batch*seq_len)
-    loss=criterion(predict,target)
-    return loss
-
-#一つの文につき単語の正解率を計算
-#これをbatchにつき計算してsumを返す
-def predict_calc(predict,target):
-    #predict:(batch,seq_len,embed_size)
-    #target:(batch,seq_len)
-    type="normal"
-    if type=="normal":
-        batch=predict.size(0)
-        seq_len=predict.size(1)
-        predict=predict.contiguous().view(batch*seq_len,-1)
-        target=target.contiguous().view(-1)
-        predict_rate=(torch.argmax(predict,dim=-1)==target).sum().item()/seq_len
-        return predict_rate
-    elif type=="bleu":
-        predict=torch.argmax(predict,dim=-1).tolist()#(batch,seq_len,embed_size)
-        target=target.tolist()#(batch,seq_len)
-        predict_sum=0
-        for p,t in zip(predict,target):#batchごと
-            predict_sum+=nltk.bleu_score.sentence_bleu([p],t)
-        return predict_sum
-
-#idからid2wordを使ってwordに戻して返す
-def predict_sentence(predict,target,id2word):
-    #predict:(batch,seq_len)
-    #target:(batch,seq_len)
-    predict=torch.argmax(predict,dim=-1).tolist()#(batch,seq_len)
-    #EOSの前まで
-    predict_list=[]
-    #batchの中の一つずつ
-    predict_list=[" ".join([id2word[w] for w in sentence[0:index_remake(sentence,constants.EOS)]])\
-                                        for sentence in predict]
-    #predict_list=[" ".join([id2word[w] for w in sentence[0:index_ramake(sentence,constants.EOS)]])\
-    #                                    for sentence in predict]
-    return predict_list
-
-#indexの改造,要素がない場合はリストの長さを返す
-def index_remake(sentence_list,word):
-    if word in sentence_list:
-        return sentence_list.index(word)
-    else:
-        return len(sentence_list)
-
-"""
-def predict_sentence(predict,target,id2word):
-    #predict:(batch,beam_width,seq_len)
-    #target:(batch,seq_len)
-    predict=torch.argmax(predict,dim=-1).tolist()#(batch,seq_len)
-    #EOSの前まで
-    predict_list=[]
-    #batchの中の一つずつ
-    predict_list=[[" ".join([id2word[w] for w in sentence[0:index_remake(sentence,constants.EOS)]])\
-                                        for sentence in sentences]\
-                                        for sentences in predict]
-    for sentence in predict:
-        sentence=[id2word[w] for w in sentence[0:index_remake(sentence,constants.EOS)]]
-        sentence=" ".join(sentence)
-        predict_list.append(sentence)
-    return predict_list
-"""

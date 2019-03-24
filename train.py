@@ -24,18 +24,27 @@ from torch.autograd import Variable
 import time
 from model.seq2seq import Seq2Seq
 from model.seq2seq2 import Seq2Seq2
-from func.utils import Word2Id,BatchMaker,make_vec,make_vec_c,to_var,logger,get_args,data_loader,loss_calc,predict_calc
+from model.transformer.transformer import Transformer
+from model.seq2seq4 import Seq2Seq4
+
+from func.utils import Word2Id,BatchMaker,make_vec,make_vec_c,to_var,logger,data_loader
+from func.predict import loss_calc,predict_calc,predict_sentence
 from func import constants
+from func.parser import get_args
 import nltk
 import datetime
 import os
 
+
+
+
 #epochあたりの学習
 def model_handler(args,data,train=True,data_kind="train"):
     start=time.time()
-    sentences=data["sentences"]
-    questions=data["questions"]
-    data_size=len(questions)
+    sources=data["sources"]
+    targets=data["targets"]
+    id2word=data["id2word"]
+    data_size=len(sources)
     batch_size=0
     if train:
         batch_size=args.train_batch_size
@@ -44,18 +53,18 @@ def model_handler(args,data,train=True,data_kind="train"):
         batch_size=args.test_batch_size
         model.eval()
     #batchをランダムな配列で指定する
-    batchmaker=BatchMaker(data_size,batch_size,train)
+    batchmaker=BatchMaker(data_size,batch_size,True)
     batches=batchmaker()
     predict_rate=0
     loss_sum=0
     for i_batch,batch in enumerate(batches):
         #これからそれぞれを取り出し処理してモデルへ
-        input_words=make_vec([sentences[i] for i in batch])
-        output_words=make_vec([questions[i] for i in batch])#(batch,seq_len)
+        input_words=make_vec(args,[sources[i] for i in batch])
+        output_words=make_vec(args,[targets[i] for i in batch])#(batch,seq_len)
         if train:
             optimizer.zero_grad()
         #modelにデータを渡してpredictする
-        predict=model(input_words,output_words,train=True)#(batch,seq_len,vocab_size)
+        predict=model(input_words,output_words,train)#(batch,seq_len,vocab_size)
         #trainの場合はパラメータの更新を行う
         if train==True:
             #predictもoutput_wordsも<SOS>を除く
@@ -66,8 +75,20 @@ def model_handler(args,data,train=True,data_kind="train"):
             if i_batch%args.print_iter==0:
                 now=time.time()
                 logger(args,"epoch,{}\tbatch\t{}\tloss:{}\ttime:{}".format(epoch,i_batch,loss.data,now-start))
+                predict,target=predict_sentence(args,predict,output_words[:,1:],id2word)#(batch,seq_len)
+            if i_batch%500==0:
+                for i in range(5):
+                    print(predict[i])
+                    print(target[i])
+                    print()
         else:
             predict_rate+=predict_calc(predict,output_words[:,1:])
+            predict,target=predict_sentence(args,predict,output_words[:,1:],id2word)#(batch,seq_len)
+            if i_batch==0:
+                for i in range(5):
+                    print(predict[i])
+                    print(target[i])
+                    print()
 
     #epochの記録
     if train:
@@ -79,7 +100,8 @@ def model_handler(args,data,train=True,data_kind="train"):
 
         #テストデータにおいて、predict_rateが上回った時のみモデルを保存
         if data_kind=="test" and args.high_score<predict_rate:
-            old_path="model_data/{}_predict_rate_{}_epoch_{}_model.pth".format(args.start_time,args.high_score,args.high_epoch)
+            old_path="model_data/{}_predict_rate_{}_epoch_{}_model.pth"\
+                    .format(args.start_time,round(args.high_score,3),args.high_epoch)
             if os.path.exists(old_path):
                 os.remove(old_path)
             args.high_score=predict_rate
@@ -92,8 +114,14 @@ args=get_args()
 train_data=data_loader(args,"data/train_data.json",first=True)
 test_data=data_loader(args,"data/test_data.json",first=False)
 
+device_kind="cuda:{}".format(args.cuda_number) if torch.cuda.is_available() else "cpu"
+args.device=torch.device(device_kind)
+
 model=Seq2Seq(args) if args.model_version==1 else \
-        Seq2Seq2(args)
+        Seq2Seq2(args) if args.model_version==2 else \
+        Transformer(args) if args.model_version==3 else \
+        Seq2Seq4(args)
+model.to(args.device)
 
 #start_epochが0なら最初から、指定されていたら学習済みのものをロードする
 if args.start_epoch>=1:
@@ -102,10 +130,7 @@ if args.start_epoch>=1:
 else:
     args.start_epoch=0
 
-#pytorch0.4より、OpenNMT参考
-device_kind="cuda:{}".format(args.cuda_number) if torch.cuda.is_available() else "cpu"
-device=torch.device(device_kind)
-model.to(device)
+
 optimizer = optim.Adam(model.parameters(),lr=args.lr)
 
 logger(args,"use {}".format(device_kind))

@@ -25,19 +25,21 @@ from torch.autograd import Variable
 import time
 from model.seq2seq import Seq2Seq
 from model.seq2seq2 import Seq2Seq2
-from func.utils import Word2Id,BatchMaker,make_vec,make_vec_c,to_var,logger,get_args,data_loader,loss_calc,predict_calc,predict_sentence
+from model.transformer.transformer import Transformer
+from func.utils import Word2Id,BatchMaker,make_vec,make_vec_c,to_var,logger,data_loader
+from func.predict import loss_calc,predict_calc,predict_sentence
 from func import constants
+from func.parser import get_args
 import nltk
 
 
 #epochあたりの学習
 def model_handler(args,data,train=True):
     start=time.time()
-    sentences=data["sentences"]
-    questions=data["questions"]
+    sources=data["sources"]
+    targets=data["targets"]
     id2word=data["id2word"]
-    data_size=len(questions)
-
+    data_size=len(sources)
 
     batch_size=args.test_batch_size
     model.eval()
@@ -48,32 +50,39 @@ def model_handler(args,data,train=True):
     loss_sum=0
     #生成した文を保存するリスト
     predicts=[]
+    targets_list=[]
     for i_batch,batch in tqdm(enumerate(batches)):
         #これからそれぞれを取り出し処理してモデルへ
-        input_words=make_vec([sentences[i] for i in batch])
-        output_words=make_vec([questions[i] for i in batch])#(batch,seq_len)
+        input_words=make_vec(args,[sources[i] for i in batch])
+        output_words=make_vec(args,[targets[i] for i in batch])#(batch,seq_len)
         #modelにデータを渡してpredictする
         predict=model(input_words,output_words,train)#(batch,seq_len,vocab_size)
-        predict=predict_sentence(predict,output_words[:,1:],id2word)#(batch,seq_len)
+        predict,target=predict_sentence(args,predict,output_words[:,1:],id2word)#(batch,seq_len)
         predicts.extend(predict)
+        targets_list.extend(target)
 
-    sentences=[" ".join([id2word[id] for id in sentence]) for sentence in sentences]#idから単語へ戻す
-    questions=[" ".join([id2word[id] for id in sentence[1:-1]]) for sentence in questions]#idから単語へ戻す
+    sources=[" ".join([id2word[id] for id in sentence]) for sentence in sources]#idから単語へ戻す
+    #targets=[" ".join([t_id2word[id] for id in sentence[1:-1]]) for sentence in targets]#idから単語へ戻す
 
     with open("data/predict_sentences.json","w")as f:
-        data={"sentences":sentences,
-                "questions":questions,
+        data={"sources":sources,
+                "targets":targets_list,
                 "predicts":predicts}
         json.dump(data,f)
 
 ##start main
 args=get_args()
-test_data=data_loader(args,"data/test_data.json",first=True) if args.use_train_data==False else \
-            data_loader(args,"data/train_data.json",first=True)
+train_data=data_loader(args,"data/train_data.json",first=True)
+test_data=data_loader(args,"data/test_data.json",first=False) if args.use_train_data==False else train_data
+
+device_kind="cuda:{}".format(args.cuda_number) if torch.cuda.is_available() else "cpu"
+args.device=torch.device(device_kind)
+
 model=Seq2Seq(args) if args.model_version==1 else \
-        Seq2Seq2(args)
+        Seq2Seq2(args) if args.model_version==2 else \
+        Transformer(args)
 
-
+model.to(args.device)
 
 if args.model_name!="":
     param = torch.load("model_data/{}".format(args.model_name))
@@ -84,7 +93,6 @@ elif args.start_epoch>=1:
     model.load_state_dict(param)
 else:
     args.start_epoch=0
-
 
 #pytorch0.4より、OpenNMT参考
 device=torch.device("cuda:{}".format(args.cuda_number) if torch.cuda.is_available() else "cpu")

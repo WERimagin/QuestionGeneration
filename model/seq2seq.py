@@ -11,12 +11,15 @@ from model.decoder import Decoder
 class Seq2Seq(nn.Module):
     def __init__(self,args):
         super(Seq2Seq, self).__init__()
+        
+        self.beam=args.beam
+
         self.encoder=Encoder(args)
         self.decoder=Decoder(args)
 
-    def forward(self, input_words,output_words,train=True,beam=False):
+    def forward(self, input_words,output_words,train=True):
         #Encoderに投げる
         encoder_outputs, encoder_hidden = self.encoder(input_words)#(batch,seq_len,hidden_size*2)
-        output=self.decoder(encoder_outputs,encoder_hidden,output_words,train) if beam==False else \
+        output=self.decoder(encoder_outputs,encoder_hidden,output_words,train) if self.beam==False else \
                 self.decoder.beam_decode(encoder_outputs,encoder_hidden,output_words,train)
         return output

@@ -49,7 +49,8 @@ def vec_process(word_count):
     vec_size=300
     path="~/Desktop/data/glove.840B.300d.txt" if vec_size==300 else "data/glove.6B.{}d.txt".format(vec_size)
 
-    word2id={w:i for i,(w,count) in enumerate(word_count.items(),6) if count>=0}
+    word_count=sorted(word_count.items(),key=lambda x:-x[1])
+    word2id={w:i for i,(w,count) in enumerate(word_count,6) if count>=0}
     word2id["<PAD>"]=0
     word2id["<UNK>"]=1
     word2id["<SOS>"]=2
