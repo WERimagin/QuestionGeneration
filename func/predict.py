@@ -10,8 +10,8 @@ from func import constants
 
 #lossの計算
 def loss_calc(predict,target):
-    #criterion = nn.CrossEntropyLoss(ignore_index=constants.PAD)#<pad>=0を無視
-    criterion = nn.CrossEntropyLoss()#<pad>=0を無視
+    criterion = nn.CrossEntropyLoss(ignore_index=constants.PAD)#<pad>=0を無視
+    #criterion = nn.CrossEntropyLoss()#<pad>=0を無視
     batch=predict.size(0)
     seq_len=predict.size(1)
     #batchとseq_lenを掛けて一次元にしてentropyを計算
