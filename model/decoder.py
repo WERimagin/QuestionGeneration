@@ -90,7 +90,6 @@ class Decoder(nn.Module):
         #出力の長さ。教師がない場合は20で固定
         output_maxlen=output_seq_len
         teacher_forcing_ratio=self.teacher_rate if train else 0
-        print(teacher_forcing_ratio)
 
         #decoderからの出力結果
         outputs=torch.from_numpy(np.zeros((output_seq_len,batch_size,self.vocab_size))).to(self.device)

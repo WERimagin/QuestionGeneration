@@ -24,7 +24,7 @@ def get_args():
     parser.add_argument("--layer_size", type=int, default="2", help="input epoch number")
     parser.add_argument("--vocab_size", type=int, default="30000", help="input epoch number")
     parser.add_argument("--lr", type=float, default="0.001", help="input epoch number")
-    parser.add_argument("--teacher_rate", type=float, default="0.5", help="input epoch number")
+    parser.add_argument("--teacher_rate", type=float, default="1.0", help="input epoch number")
 
     #そのたのパラメーター
     parser.add_argument("--print_iter", type=int, default="100", help="input epoch number")
